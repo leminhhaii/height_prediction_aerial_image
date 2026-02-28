@@ -1,0 +1,42 @@
+# ==========================================
+#  DSM2DTM – Evaluation Configuration
+# ==========================================
+#
+# Usage:
+#   python tools/evaluate.py --config configs/eval_default.yaml \
+#       --predictions_dir experiments/pixel_loss/inference \
+#       --gt_dir datasets/new_data/ndsm
+
+model:
+  base_model: "runwayml/stable-diffusion-v1-5"
+  vae_path: "models/vae_model_fintuned_lora_2"
+  controlnet_path: "experiments/pixel_loss/best_model"
+  prediction_type: "sample"
+
+data:
+  data_root: "datasets/new_data/"
+  split_json: "datasets/split_dataset.json"
+  dsm_dir: "dsm"
+  dtm_dir: "ndsm"
+  normalization: "log_global"
+  dsm_global_min: 760.0
+  dsm_global_max: 1450.0
+  dtm_global_min: 0.0
+  dtm_global_max: 650.0
+
+inference:
+  num_steps: 50
+  guidance_scale: 1.0
+  prompt: ""
+  seed: 42
+
+output:
+  dir: "./evaluation_results"
+  unit: "ft"
+
+evaluation:
+  elevation_bins: [0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350]
+  n_worst: 10
+
+fp16: true
+vae_scale_factor: 0.18215

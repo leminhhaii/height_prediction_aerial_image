@@ -1,0 +1,15 @@
+controlnet_noise_loss/
+controlnet_pixel_loss/
+models/
+
+datasets/
+
+evaluation_results_pixel_loss_v4/
+
+legacy/
+
+# pycache files
+__pycache__/
+*.pyc
+
+note.txt

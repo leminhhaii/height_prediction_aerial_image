@@ -1,0 +1,73 @@
+# ==========================================
+#  DSM2DTM – Pixel-Loss ControlNet Training
+# ==========================================
+#
+# Uses prediction_type="sample" with MAE + Sobel gradient loss.
+# Normalization: log_global (consistent between train/infer).
+#
+# Usage:
+#   python tools/train.py --config configs/train_pixel_loss.yaml
+#   python tools/train.py --config configs/train_pixel_loss.yaml --set training.learning_rate=1e-5
+
+model:
+  base_model: "runwayml/stable-diffusion-v1-5"
+  vae_path: "models/vae_model_fintuned_lora_2"
+  controlnet_path: null          # null = initialize from UNet
+  prediction_type: "sample"
+
+data:
+  data_root: "datasets/new_data/"
+  split_json: "datasets/split_dataset.json"
+  dsm_dir: "dsm"
+  dtm_dir: "ndsm"
+  crop_size: 704
+  normalization: "log_global"
+  dsm_global_min: 760.0
+  dsm_global_max: 1450.0
+  dtm_global_min: 0.0
+  dtm_global_max: 650.0
+
+training:
+  batch_size: 4
+  gradient_accumulation_steps: 2
+  learning_rate: 2.0e-5
+  weight_decay: 0.0
+  total_steps: 10000
+  warmup_steps: 500
+  save_every: 2000
+  val_every: 1000
+  log_every: 100
+  num_workers: 2
+
+loss:
+  type: "pixel"
+  mae_weight: 1.0
+  grad_weight: 0.5
+
+inference:
+  num_steps: 50
+  guidance_scale: 1.0
+  prompt: ""
+  negative_prompt: ""
+  seed: 42
+  num_samples: 2
+  infer_every: 1000
+  fixed_infer_pair_index: 0
+
+scheduler:
+  beta_start: 0.00085
+  beta_end: 0.012
+  num_train_timesteps: 1000
+
+output:
+  dir: "./experiments/pixel_loss"
+  unit: "ft"
+
+evaluation:
+  elevation_bins: [0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350]
+  n_worst: 10
+
+fp16: true
+seed: 42
+vae_scale_factor: 0.18215
+prompt_dropout_prob: 0.2

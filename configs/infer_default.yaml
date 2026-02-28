@@ -1,0 +1,34 @@
+# ==========================================
+#  DSM2DTM – Inference Configuration
+# ==========================================
+#
+# Usage:
+#   python tools/infer.py --config configs/infer_default.yaml --input_dir path/to/dsm_tiles
+#   python tools/infer.py --config configs/infer_default.yaml --set model.controlnet_path=experiments/pixel_loss/best_model
+
+model:
+  base_model: "runwayml/stable-diffusion-v1-5"
+  vae_path: "models/vae_model_fintuned_lora_2"
+  controlnet_path: "experiments/pixel_loss/best_model"
+  prediction_type: "sample"
+
+data:
+  normalization: "log_global"
+  dsm_global_min: 760.0
+  dsm_global_max: 1450.0
+  dtm_global_min: 0.0
+  dtm_global_max: 650.0
+
+inference:
+  num_steps: 50
+  guidance_scale: 1.0
+  prompt: ""
+  negative_prompt: ""
+  seed: 42
+
+output:
+  dir: "./inference_output"
+  unit: "ft"
+
+fp16: true
+vae_scale_factor: 0.18215
