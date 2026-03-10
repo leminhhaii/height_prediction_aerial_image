@@ -17,7 +17,7 @@ def create_split(
     data_root: str,
     dsm_dir: str = "dsm",
     dtm_dir: str = "ndsm",
-    output_path: str = "datasets/split_dataset.json",
+    output_path: str = "datasets/new_data/split_dataset.json",
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
     seed: int = 42,

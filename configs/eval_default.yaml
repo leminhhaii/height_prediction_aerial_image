@@ -15,7 +15,7 @@ model:
 
 data:
   data_root: "datasets/new_data/"
-  split_json: "datasets/split_dataset.json"
+  split_json: "datasets/new_data/split_dataset.json"
   dsm_dir: "dsm"
   dtm_dir: "ndsm"
   normalization: "log_global"

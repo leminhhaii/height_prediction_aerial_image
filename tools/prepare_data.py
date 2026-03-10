@@ -8,7 +8,7 @@ Subcommands:
     stats    – Calculate global statistics
 
 Usage:
-    python tools/prepare_data.py split --data_root datasets/new_data --output datasets/split_dataset.json
+    python tools/prepare_data.py split --data_root datasets/new_data --output datasets/new_data/split_dataset.json
     python tools/prepare_data.py crop --dsm_dir datasets/new_data/dsm --dtm_dir datasets/new_data/dtm --output_dir datasets/new_data_vae --crop_size 512
     python tools/prepare_data.py stats --data_root datasets/new_data
 """
@@ -87,7 +87,7 @@ def main():
     p_split.add_argument("--data_root", type=str, required=True)
     p_split.add_argument("--dsm_subdir", type=str, default="dsm")
     p_split.add_argument("--dtm_subdir", type=str, default="ndsm")
-    p_split.add_argument("--output", type=str, default="datasets/split_dataset.json")
+    p_split.add_argument("--output", type=str, default="datasets/new_data/split_dataset.json")
     p_split.add_argument("--train_ratio", type=float, default=0.8)
     p_split.add_argument("--val_ratio", type=float, default=0.1)
     p_split.add_argument("--seed", type=int, default=42)

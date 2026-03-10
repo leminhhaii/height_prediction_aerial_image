@@ -13,3 +13,9 @@ __pycache__/
 *.pyc
 
 note.txt
+
+experiments/
+inference_output/
+
+evaluation_results/
+flow.md

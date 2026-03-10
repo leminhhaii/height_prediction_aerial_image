@@ -81,9 +81,7 @@ python tools/infer.py --config configs/infer_default.yaml --split test --control
 ### 5. Evaluate
 
 ```bash
-python tools/evaluate.py --config configs/eval_default.yaml \
-    --predictions_dir experiments/pixel_loss/inference \
-    --gt_dir datasets/new_data/ndsm
+python tools/evaluate.py --config configs/eval_default.yaml     --predictions_dir inference_output     --gt_dir datasets/new_data/ndsm
 ```
 
 ## Two Training Strategies

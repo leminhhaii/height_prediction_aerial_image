@@ -27,7 +27,7 @@ class ModelConfig:
 class DataConfig:
     """Data-related configuration."""
     data_root: str = "datasets/new_data/"
-    split_json: str = "datasets/split_dataset.json"
+    split_json: str = "datasets/new_data/split_dataset.json"
     dsm_dir: str = "dsm"
     dtm_dir: str = "ndsm"
     crop_size: int = 704
