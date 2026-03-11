@@ -5,6 +5,8 @@ models/
 datasets/
 
 evaluation_results_pixel_loss_v4/
+evaluation_results_pixel_decoded_loss/
+evaluation_results_pixel_loss/
 
 legacy/
 

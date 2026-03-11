@@ -7,7 +7,8 @@ Convert DSM (Digital Surface Model) tiles to DTM (Digital Terrain Model) using C
 ```
 dsm2dtm/
 ├── configs/                        # YAML experiment configurations
-│   ├── train_pixel_loss.yaml       # Pixel-loss training (MAE + Gradient)
+│   ├── train_pixel_loss.yaml       # Pixel-loss training (MAE + Gradient on latents)
+│   ├── train_pixel_decoded.yaml    # Pixel-decoded loss (MAE + Gradient in pixel space via VAE)
 │   ├── train_noise_loss.yaml       # Noise-loss training (MSE)
 │   ├── infer_default.yaml          # Inference defaults
 │   └── eval_default.yaml           # Evaluation defaults
@@ -21,7 +22,7 @@ dsm2dtm/
 │   ├── utils/                      # Config, logging, prompt encoding, GeoTIFF I/O
 │   ├── data/                       # Normalization, datasets, splits, preprocessing
 │   ├── models/                     # VAE modifier, ControlNet loader, inference pipeline
-│   ├── losses/                     # Loss registry + pixel/noise losses
+│   ├── losses/                     # Loss registry + pixel/noise/pixel-decoded losses
 │   ├── training/                   # Trainer, validation
 │   └── evaluation/                 # Metrics, visualization, reporting
 ├── legacy/                         # Original monolithic scripts (reference)
@@ -54,8 +55,11 @@ python tools/prepare_data.py stats --data_root datasets/new_data
 ### 3. Train ControlNet
 
 ```bash
-# Pixel-loss approach (prediction_type=sample, MAE+Gradient loss)
+# Pixel-loss approach (prediction_type=sample, MAE+Gradient loss on latents)
 python tools/train.py --config configs/train_pixel_loss.yaml
+
+# Pixel-decoded loss (MAE+Gradient in pixel space via VAE decode)
+python tools/train.py --config configs/train_pixel_decoded.yaml
 
 # Noise-loss approach (prediction_type=epsilon, MSE loss)
 python tools/train.py --config configs/train_noise_loss.yaml
@@ -75,7 +79,11 @@ python tools/infer.py --config configs/infer_default.yaml --input datasets/new_d
 python tools/infer.py --config configs/infer_default.yaml --input_dir datasets/new_data/dsm
 
 # On the test split
+python tools/infer.py --config configs/infer_default.yaml --split test --controlnet_path experiments/pixel_decoded_loss/best_model
+
+# On pixel base model
 python tools/infer.py --config configs/infer_default.yaml --split test --controlnet_path experiments/pixel_loss/best_model
+
 ```
 
 ### 5. Evaluate
@@ -84,14 +92,16 @@ python tools/infer.py --config configs/infer_default.yaml --split test --control
 python tools/evaluate.py --config configs/eval_default.yaml     --predictions_dir inference_output     --gt_dir datasets/new_data/ndsm
 ```
 
-## Two Training Strategies
+## Training Strategies
 
-| | Pixel Loss | Noise Loss |
-|---|---|---|
-| **prediction_type** | `sample` | `epsilon` |
-| **Loss** | MAE + Sobel Gradient | MSE |
-| **Normalization** | `log_global` | `percentile` |
-| **Config** | `configs/train_pixel_loss.yaml` | `configs/train_noise_loss.yaml` |
+| | Pixel Loss | Pixel Decoded Loss | Noise Loss |
+|---|---|---|---|
+| **prediction_type** | `sample` | `sample` | `epsilon` |
+| **Loss** | MAE + Sobel Gradient (latent space) | MAE + Sobel Gradient (pixel space via VAE) | MSE |
+| **Normalization** | `log_global` | `log_global` | `percentile` |
+| **Config** | `train_pixel_loss.yaml` | `train_pixel_decoded.yaml` | `train_noise_loss.yaml` |
+
+**Pixel Decoded Loss** decodes predicted latents through the frozen VAE to pixel space `[B,1,H,W]` before computing losses on actual elevation values. Uses VAE gradient checkpointing + slicing to fit within 24GB VRAM. Requires ~1GB additional VRAM over the base pixel loss.
 
 > **Important**: Normalization must match between training and inference. The config system enforces this automatically.
 
@@ -152,11 +162,25 @@ The standard SD1.5 VAE (3-channel RGB) is modified for single-channel elevation 
 
 ### Pixel Loss (prediction_type=sample)
 $L = \lambda_{mae} \cdot L_{mae} + \lambda_{grad} \cdot L_{grad}$
-- MAE: L1 between predicted and target latents
+- MAE: L1 between predicted and target **latents** `[B, 4, H/8, W/8]`
 - Gradient: L1 between Sobel gradients (preserves edges/terrain features)
+
+### Pixel Decoded Loss (prediction_type=sample)
+Same formula as Pixel Loss, but computed in **decoded pixel space** `[B, 1, H, W]`:
+- Predicted latents are decoded through the frozen VAE before loss computation
+- Gradients flow through the VAE decode back to ControlNet
+- Memory optimizations: VAE gradient checkpointing (~50GB -> ~0.9GB) + VAE slicing (batch-wise decode)
+- More geometrically meaningful than latent-space losses
 
 ### Noise Loss (prediction_type=epsilon)
 Standard MSE between predicted noise and actual noise.
+
+## Verification (CPU, no GPU required)
+
+```bash
+# Verify pixel_decoded loss: registry, forward pass, gradient flow, backward compat
+python tools/verify_pixel_decoded_loss.py
+```
 
 ## VAE Fine-tuning
 

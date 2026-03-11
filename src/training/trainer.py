@@ -156,6 +156,8 @@ class ControlNetTrainer:
 
         # Loss
         self.loss_fn = get_loss(cfg.loss)
+        if hasattr(self.loss_fn, 'set_vae'):
+            self.loss_fn.set_vae(self.vae, cfg.vae_scale_factor)
         self.logger.info(f"Loss function: {cfg.loss.type}")
 
         # Mixed precision scaler
